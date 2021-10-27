@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.apilocar.exception.SvcException;
 import br.com.apilocar.model.Veiculo;
-import br.com.apilocar.repository.VeiculoRepository;
 import br.com.apilocar.service.VeiculoService;
 
 @RestController
@@ -27,33 +27,35 @@ public class VeiculoController {
 	@Autowired
 	private VeiculoService veiculoService;
 	
-	@Autowired
-	private VeiculoRepository veiculoRepository;
-
 	@PostMapping
 	public ResponseEntity<?> salvar(@RequestBody Veiculo veiculo) {
-		veiculoService.salvar(veiculo);
-		return new ResponseEntity<Veiculo>(HttpStatus.CREATED);
+		try {
+			veiculoService.salvar(veiculo);
+			return new ResponseEntity<Veiculo>(HttpStatus.CREATED);
+		} catch (SvcException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
+	
 	}
 	
 	@GetMapping
-	public ResponseEntity<?> lista(){
-		 List<Veiculo> veiculos = veiculoRepository.findAll();
-		 return new ResponseEntity<List<Veiculo>>(veiculos,HttpStatus.OK);
+	public ResponseEntity<List<Veiculo>> lista(){
+		 List<Veiculo> veiculos = veiculoService.findAll();
+		 return ResponseEntity.ok(veiculos);
 	}
 	
 	@GetMapping("/{id}")
 	public ResponseEntity<Veiculo> buscarPorId(@PathVariable Long id){
-		 Optional<Veiculo> veiculo = veiculoRepository.findById(id);
+		 Optional<Veiculo> veiculo = veiculoService.findById(id);
 		 if(veiculo == null) {
 			 return ResponseEntity.noContent().build();
 		 }
-		 return new ResponseEntity<Veiculo>(veiculo.get(),HttpStatus.OK);
+		 return ResponseEntity.ok(veiculo.get());
 	}
 	
 	@GetMapping("/modelo")
-	public ResponseEntity<?> lista(@RequestParam String modelo){
-		 List<Veiculo> veiculos = veiculoRepository.buscarVeiculos(modelo);
-		 return new ResponseEntity<List<Veiculo>>(veiculos,HttpStatus.OK);
+	public ResponseEntity<List<Veiculo>> lista(@RequestParam String modelo){
+		 List<Veiculo> veiculos = veiculoService.buscarVeiculos(modelo);
+		 return ResponseEntity.ok(veiculos);
 	}
 }
